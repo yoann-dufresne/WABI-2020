@@ -1,0 +1,29 @@
+\setcounter{table}{0}
+\renewcommand{\thetable}{A\arabic{table}}
+
+\section{Appendix}
+
+\subsection{Experiment on perfect cliques versus perfect lcps \label{appendix:perfectlcps}}
+
+Given an interval graph with $m$ vertices, and an integer parameter $f$, we repeated for each vertex $x$ the following process $f$ times: pick another unmerged node $y$ at random and merge vertices $x$ and $y$. This generates a simulated barcode graph where all barcodes correspond to exactly $f$ molecules. Then on this graph we computed all maximal cliques and all lcps and call such a set of vertices \textit{perfect} if it corresponds to a set of consecutive intervals in the original interval graph.
+
+\begin{table}[h!]
+    \begin{tabular}{|l|l|l|l||l|l|}
+        \hline
+        $m$ & $f$ & cliques & perfect cliques & lcp & perfect lcp \tabularnewline
+        \hline
+        5000 & 2 & 5318.5 & 54645.2 (9.73\%) & 4600.2 & 12763 (36.04\%) \tabularnewline
+        \hline
+        5000 & 3 & 6361.8 & 76569.4 (8.31\%) & 4054.3 & 29924.8 (13.55\%) \tabularnewline
+        \hline
+        10000 & 2 & 10344.8 & 104817.5 (9.87\%) & 9586.2 & 18958.4 (50,56\%) \tabularnewline
+        \hline
+        10000 & 3 & 12070.6 & 130092.4 (9.28\%) & 9031.2 & 44276 (20.40\%) \tabularnewline
+        \hline
+    \end{tabular}
+    \caption{Average number of perfect maximal clique vs perfect lcps, averaged over $10$ runs for each setting defined by $m$ and $f$.
+    %For each row: an interval graph containing $m$ nodes is generated, and the following procedure is repeated $f$ times for each node $x$: pick another random node $y \neq x$ and glue node $x$ with node $y$. On this simulated barcode graph, max clique and lcp detection are performed.
+    %Cliques and lcps are labeled perfect if they contain a list of barcodes that can be a true succession of interval in the originated interval graph. The numbers are averages over 10 random executions.
+    \label{tab:clqvslcp}}
+\end{table}
+ 

@@ -1,0 +1,486 @@
+
+\documentclass[a4paper,UKenglish,cleveref, autoref, thm-restate,authorcolumns]{lipics-v2019}
+%This is a template for producing LIPIcs articles. 
+%See lipics-manual.pdf for further information.
+%for A4 paper format use option "a4paper", for US-letter use option "letterpaper"
+%for british hyphenation rules use option "UKenglish", for american hyphenation rules use option "USenglish"
+%for section-numbered lemmas etc., use "numberwithinsect"
+%for enabling cleveref support, use "cleveref"
+%for enabling autoref support, use "autoref"
+%for anonymousing the authors (e.g. for double-blind review), add "anonymous"
+%for enabling thm-restate support, use "thm-restate"
+
+\usepackage[utf8]{inputenc}
+\usepackage{graphicx}
+\usepackage{algorithm}
+\usepackage[noend]{algpseudocode}
+\usepackage{todonotes}
+\usepackage{array}
+
+\def\Balph{{\cal B}}% Barcode alphabet
+\def\MolOrd{{\cal O}}% Total order on molecules
+\def\MolSet{{\cal M}}% Molecules set
+
+
+\usepackage{amsthm}
+%\newtheorem{lemma}{Lemma}
+\newtheorem{property}{Property}
+%\newtheorem{claim}{Claim}
+\newtheorem{conjecture}{Conjecture}
+%\newtheorem{remark}{Remark}
+\newtheorem{question}{Question}
+%\newtheorem{definition}{Definition}
+\newtheorem{problem}{Problem}
+
+%\graphicspath{{./graphics/}}%helpful if your graphic files are in another directory
+
+\bibliographystyle{plainurl}% the mandatory bibstyle
+
+\title{A graph-theoretic barcode ordering model for linked-reads}
+
+%\titlerunning{Dummy short title} %TODO optional, please use if title is longer than one line
+
+\author{Yoann Dufresne}{Department of Computational Biology, C3BI USR 3756 CNRS, Institut Pasteur, Paris, France}{yoann.dufresne@pasteur.fr}{https://orcid.org/0000-0002-0930-8920}{}%TODO mandatory, please use full name; only 1 author per \author macro; first two parameters are mandatory, other parameters can be empty. Please provide at least the name of the affiliation and the country. The full address is optional
+
+\author{Chen Sun}{Department of Computer Science and Engineering, The Pennsylvania State University, USA}{chensunx@gmail.com}{}{}
+
+\author{Pierre Marijon}{Center for Bioinformatics, Saarland University, Saarland Informatics Campus E2.1, 66123 Saarbrücken, Germany}{pmarijon@mmci.uni-saarland.de}{https://orcid.org/0000-0002-6694-6873}{}
+
+\author{Dominique Lavenier}{IRISA, Inria, Universit\'e de Rennes, France}{lavenier@irisa.fr}{https://orcid.org/0000-0003-2557-680X}{}
+
+\author{Cedric Chauve}{Department of Mathematics, Simon Fraser University, Canada \and LaBRI, Universit\'e de Bordeaux, France}{cedric.chauve@sfu.ca}{[orcid]}{NSERC Discovery Grant RGPIN-03986}
+
+\author{Rayan Chikhi}{Department of Computational Biology, C3BI USR 3756 CNRS, Institut Pasteur, Paris, France}{rayan.chikhi@pasteur.fr}{https://orcid.org/0000-0003-1099-8735}{INCEPTION project (PIA/ANR-16-CONV-0005)}
+
+\authorrunning{Dufresne \emph{et al}.}
+
+\Copyright{Yoann Dufresne, Pierre Marijon, Cedric Chauve and Rayan Chikhi} %TODO mandatory, please use full first names. LIPIcs license is "CC-BY";  http://creativecommons.org/licenses/by/3.0/
+
+%\ccsdesc[100]{\textcolor{red}{Replace ccsdesc macro with valid one}} %TODO mandatory: Please choose ACM 2012 classifications from https://dl.acm.org/ccs/ccs_flat.cfm 
+\begin{CCSXML}
+<ccs2012>
+   <concept>
+       <concept_id>10010405.10010444.10010450</concept_id>
+       <concept_desc>Applied computing~Bioinformatics</concept_desc>
+       <concept_significance>500</concept_significance>
+       </concept>
+ </ccs2012>
+\end{CCSXML}
+
+\ccsdesc[500]{Applied computing~Bioinformatics}
+
+\keywords{DNA sequencing, graph algorithms, linked-reads, interval graphs, cliques} %TODO mandatory; please add comma-separated list of keywords
+
+\category{} %optional, e.g. invited paper
+
+\relatedversion{} %optional, e.g. full version hosted on arXiv, HAL, or other respository/website
+%\relatedversion{A full version of the paper is available at \url{...}.}
+
+\supplement{\url{https://gitlab.pasteur.fr/ydufresne/linkedreadsmoleculeordering}}%optional, e.g. related research data, source code, ... hosted on a repository like zenodo, figshare, GitHub, ...
+
+%\funding{(Optional) general funding statement \dots}%optional, to capture a funding statement, which applies to all authors. Please enter author specific funding statements as fifth argument of the \author macro.
+
+\acknowledgements{The authors are grateful to Paul Medvedev for preliminary work and discussions.}%optional
+
+%\nolinenumbers %uncomment to disable line numbering
+
+%\hideLIPIcs  %uncomment to remove references to LIPIcs series (logo, DOI, ...), e.g. when preparing a pre-final version to be uploaded to arXiv or another public repository
+
+%Editor-only macros:: begin (do not touch as author)%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\EventEditors{John Q. Open and Joan R. Access}
+\EventNoEds{2}
+\EventLongTitle{42nd Conference on Very Important Topics (CVIT 2016)}
+\EventShortTitle{}
+\EventAcronym{CVIT}
+\EventYear{2016}
+\EventDate{December 24--27, 2016}
+\EventLocation{Little Whinging, United Kingdom}
+\EventLogo{}
+\SeriesVolume{42}
+\ArticleNo{23}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{document}
+
+\maketitle
+
+%TODO mandatory: add short abstract of the document
+\begin{abstract}
+%We consider two theoretical graph problems that originate from modelling linked-read sequencing. The setting is as follows. 
+Considering a set of intervals on the real line, an interval graph records these intervals as nodes and their intersections as edges. Identifying (i.e. merging) pairs of nodes in an interval graph results in a multiple-interval graph. 
+%One can then glue pairs of nodes (discarding any edge between a pair of glued nodes) to form a multiple-interval graph. 
+Given only the nodes and the edges of the multiple-interval graph without knowing the underlying intervals, we are interested in the following questions. Can one determine how many intervals correspond to each node? Can one compute a walk over the multiple-interval graph nodes that reflects the ordering of the original intervals? These questions are closely related to linked-read DNA sequencing, where barcodes identify long molecules (our intervals) whose intersection graph forms an interval graph. %which are then sequenced using short reads. A sequence barcode is attached to each short read for the identification of its originating molecule, 
+Each barcode may correspond to multiple molecules, which complicates downstream analysis, and correspond to the identification of nodes of the corresponding interval graph. % such as de novo assembly. %while this generally does not pose an issue when a reference genome is available, it complicates downstream reference-free analysis such as de novo assembly. 
+Resolving the above graph-theoretic problems would facilitate analyses of linked-reads sequencing data, through enabling the conceptual separation of barcodes into molecules and providing, through the molecules order, a skeleton for assembling accurately sequenced reads. Here, we propose a framework that takes as input an arbitrary intersection graph (such as an overlap graph of barcodes) and constructs a heuristic approximation of the ordering of the original intervals.
+\end{abstract}
+
+\section{Introduction}
+\label{sec:introduction}
+
+%\footnote{This intro has paragraphs that were partly written by Paul, hope he'll be okay with it}
+A well-known limitation of short-read sequencing is that it does not provide long-range information, which is crucial to many biological endeavors, such as genome assembly and structural variant identification.
+There have been several sequencing technologies developed to overcome this limitation, such as matepair libraries, Hi-C, and long reads (PacBio \& Oxford Nanopore).
+Another family of approaches is linked-read sequencing, which includes 10XGenomics Chromium, stLFR~\cite{Wang2019}, CPTv2-seq~\cite{Zhang2017} and TELL-seq~\cite{Chen2019}.
+In these approaches, DNA is cloned and cut into large molecules (10-100 kbp), which are then isolated (physically in 10X, or virtually by the others using beads) % in the same tube) 
+and sheared into shorter fragments. A barcode is attached to each short fragment for identification of its originating molecule.
+Importantly, barcodes do not uniquely identify molecules: several molecules are typically labeled with the same barcode.
+The number of different barcodes differ from 150k for CPTv2 to 2 billions for TELL-seq.
+Fragments are then sequenced using a standard short-read protocol (e.g Illumina).
+
+
+Linked-reads have been used to assemble genomes~\cite{supernova}, detect complex structural variants~\cite{greer2017linked}, and more
+recently assemble metagenomes~\cite{athena}. A common challenge faced by most linked-read methods is that in order
+to make use of the linking information, the reads within each barcode should be first separated into their
+constituent molecules. 
+%The molecule separation problem is to replace the barcode identifiers of each read with a molecule identifier. 
+More formally, for each read $r$, we would like to find the identifier $mi(r)$ of its
+originating molecule, given as input an observed identifier $b(mi(r))$, where $b(x)$ associates a barcode identifier
+to a molecule $x$. Note that the image of $b$ (all barcodes) is significantly smaller than its domain (all molecules),
+hence $b$ can be viewed as a non-invertible hash function. Currently, this problem is being tackled, one way
+or another, as part of any method using linked-read data. 
+% Cedric: enleve car ca met trop de focus sur la separation de molecules
+%However, formulating and solving this as an independent problem can allow downstream methods to focus on their respective tasks, while assuming that the reads have already been separated into molecules. 
+%
+%Finding overlaps between reads sharing two barcodes can also be framed as the detection of overlaps between the underlying molecules. 
+Switching from a read-centric %or barcode-centric 
+view to a molecule-centric view opens the possibility of using  methodology similar to long-read overlap graphs. Finding an ordering of barcodes that reflects the underlying order of molecules would indeed greatly facilitate and decrease errors during the scaffolding stage of genome assembly. As noted by the authors of the ARCS scaffolder~\cite{arcs}, different molecules having the same barcode can induce false joins in a scaffolding algorithm, resulting in misassemblies.
+
+Observe that linked-read mapping tools such as \texttt{longranger} or \texttt{ema}~\cite{ema} are able to infer molecules by clustering mapping locations of reads from the same barcode. 
+While such reference-based algorithms are often applicable, they do not replace the need for \emph{de novo} algorithms. The quality of reference-based algorithms is related to the quality of the assembly, since clusters cannot be identified across across different contigs. When the genome or metagenome references are in a draft state, molecules will frequently span multiple contigs, preventing their identification. Moreover, in many situations the reference is simply unavailable.
+
+To the best of our knowledge, the barcode ordering problem has not been previously studied, and the assignment of molecule identifiers to reads without a reference has only been previously studied in~\cite{minerva}, where it was referred to as
+\emph{barcode deconvolution}. The authors first constructed a bipartite graph between reads and barcodes. An edge $(r, b)$ was added when a k-mer of read $r$ was found in another read of barcode $b$. Then a second graph was constructed with reads as nodes, and edges indicating whether two reads were connected to sufficiently many common barcodes in the bipartite graph. Finally, the second graph was clustered and each cluster reflected reads from the same molecule. This algorithm was implemented in a single-threaded Python language prototype, \texttt{Minerva}. We note that Minerva only assigns molecules identifiers to a fraction of the reads. In our tests on a simulated \emph{E. coli} dataset, Minerva reported results for 12\% of the reads, inferring around 50\% of the true number of molecules.
+
+This raises the question of whether reference-free inference of molecules is fundamentally unsolvable in the setting of linked-read data, or whether an adequate technique has just not yet been found. Surely there exist corner cases where the problem is either impossible, e.g. in an hypothetical situation where all molecules are assigned to the same barcode, or trivial, when each molecule is assigned to a different barcode. As we will see in Section 2, while there exist previous works in graph theory (e.g. in a setting corresponding to all barcodes containing just 2 molecules), the general setting does not appear to have previously been studied.
+
+% Rayan: we perhaps don't need to develop limitations of Minerva in here anymore
+% An important limitation of \texttt{Minerva} is that its main data structure (the bipartite read-barcode graph) requires $O(n)$ memory, where $n$ is the number of reads. This is impractical for datasets with hundreds of millions or billions of reads. Also, \texttt{Minerva} only uses shared k-mers between reads, and may fail to identify a molecule if an insufficient number of reads share k-mers with reads from other molecules.
+
+In this paper, we establish theoretical grounds for studying the feasibility of inferring molecule without a reference genome. %We also provide a different resolution approach than the one proposed in \texttt{Minerva}, as 
+We will not directly tackle the problem of assigning molecule identifiers to reads (as Minerva does), but instead we look at two problems which can be reduced, in the complexity sense, to molecule inference: %(detailed later in Section 1.1): 
+\begin{enumerate}
+    \item \textbf{Molecule counting}: count the number of molecules assigned to each barcode
+    \item \textbf{Molecule ordering}: reconstruct a total (or partial) order of molecules as a sequence of barcodes
+\end{enumerate}
+Staying at the level of barcodes and molecules instead of reads will allow to thoroughly establish expectations on whether molecule inference is at all feasible, %Indeed, if one can solve molecule inference, then those two sub-problems can directly be solved; taking the contraposite [..] % I don't know how to finish this sentence 
+and how various parameters (e.g. number of molecules, how many molecules per barcode, etc) influence its difficulty. 
+
+We first present the commononalities between the barcodes ordering problem, and the previously-known concepts of interval graphs and multiple-intervals graphs. We then introduce a novel object, the barcode graph, which models overlaps between  the molecules across different barcodes.
+By identifying maximal cliques in the barcode graph, which are then paired into structures that we call local clique-pairs, we show that we can construct an auxiliary graph %, the local clique-pairs graph, 
+that captures a strong signal related to the ordering of the barcodes according to their underlying molecules.
+We apply this technique to synthetic interval graphs, as well as barcode graphs constructed from simulated molecules from a real genome, and show that we are able to accurately count the number of molecules per barcode, and reconstruct an approximate but accurate molecule ordering on barcodes. Finally, we demonstrate how to construct a barcode graph directly from linked-read sequencing data.
+
+
+%This paper will focus on the first two problems because answering them can be the first step prior to any clustering approach.
+%Minerva solves question 3 (to which an answer to question 1 can be derived) but not 2. In this article, we will focus on questions 1 and 2.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\input{methods.tex}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{Results}
+
+Our results consider various types of simulated data. We described below how we generate these data and our analysis, before dicsussing our results.
+
+\subsection{Simulations set-up}
+
+\subsubsection*{Simulated data}
+
+We will examine three types of barcode graphs ordered by increasing level of realism. They will be generated from either
+\begin{enumerate}
+\item entirely synthetic sets of intervals (i.e. interval graphs) with randomly identified vertices,
+\item intersections of molecules sampled from a genome, 
+\item directly from simulated linked-read sequencing data.
+\end{enumerate}
+%The purpose of this section is to evaluate the quality of lcp graphs generated by our method and their ability to recover the underlying molecule order, as well as perform molecule counting.
+
+\subsubsection*{Analysis pipeline}
+
+%Recall that the molecule counting problem amounts to finding how many molecules were merged in each barcode. The molecule ordering problem asks for a sequence of barcodes that reflecst the order of molecules.
+%
+%As these two problems are centered on barcodes, we need a way to convert a lcp path to an ordered list of barcodes. \footnote{RC: I'm thinking of moving that part to the Methods are going from lcp path to central nodes is a choice we make towards constructing the sequence of barcodes. CC: I agree, this should be in the methods section.} For the results we will use the following simplification: each lcp in the path is replaced by its central barcode.
+%This simplification is a good proxy to approximate the barcode succession instead of the lcp succession.
+
+Our complete analysis pipeline performs the following steps:
+\begin{enumerate}
+    \item Generate all the lcps from the barcode graph (Algorithm~\ref{algo:audg})
+    \item Generate the lcp graph
+    \item Simplify the graph by transitive reduction of the triplets (Section~\ref{sec:suitable_path})
+    \item Generate the lcp path using the hybrid greedy/branch and bound algorithm (Section~\ref{sec:suitable_path})
+    \item Replace all the lcp by their central barcodes
+    \item Evaluate the accuracy of the resulting barcode sequence
+\end{enumerate}
+
+In the remaining of the Results sections, all the graphs and paths are generated by the above  pipeline, implemented using \texttt{Snakemake} and available at \url{https://gitlab.pasteur.fr/ydufresne/linkedreadsmoleculeordering}.
+
+\subsubsection*{Quality metrics}
+
+We want to analyze the quality of the lcp graph regarding the barcode graph from which it was computed.
+To be comparable, we transformed the nodes of the lcp graphs by replacing the lcps by their central barcode.
+We consider three metrics over the graphs: accuracy, sensitivity and longest increasing path. The first two metrics are estimated by randomly sampling paths having $l=2,4,10,100$ edges from the graph. To measure accuracy, a path having central nodes $(p_0,p_2,\ldots,p_l)$ is considered to be correct if there exists $m_0,m_2,\ldots,m_l$ overlapping (but not necessarily consecutive) molecules such that $m_i \in m(p_i)$, $0\leq i\leq l$. Accuracy is then defined as the number of correct paths over the total number of sampled paths. 
+To measure sensitivity, we determined for all $(l+1)$-tuples $m_i,m_{i+1},\ldots,m_{i+l}$ of consecutive molecules in the genome, whether there exist a path $b(m_i),b(m_{i+1}),\ldots,b(m_{i+l})$ in the graph. Sensitivity is then the ratio of such paths that are found in the graph.   
+Finally, the Longest Correct path (LC) metric is defined as the longest path that can be found in the lcp graph that is correct, i.e. corresponds to a barcode sequence equal to the barcodes of a sequence of overlapping molecules. This measure is not informative over the barcode graph, because it is conservative regarding the molecule path. It measure the conservation of information when the lcp graph is created.
+  
+Two additional quality metrics are defined on lcp paths: Undercounted/Overcounted (U/O) molecules and Longest Common Subsequence (LCS).
+The U/O metric is computed by recording two counters, $U$ and $O$ initialized at 0. Given each barcode $b$ that appears within a lcp path, we compare the number of occurrences of $b$ to $M_b$, the true number of molecules having barcode $b$. If $b$ occurs in the lcp path strictly more (resp. less) than $M_b$ times, $U$ (resp. $O$) is incremented by the absolute difference. U and O should both be as close to zero as possible, and they indicate how well we solve the molecule counting problem. 
+For the LCS metric, we compute the longest common subsequence between central nodes of the lcp path and the molecule path where each molecule is replaced by its barcode. The LCS reflects how well we solve the molecule ordering problem.
+
+%\todo[inline]{CC: We need to discuss the link between LIS and LCS. RC: LIP you mean? We don't really talk about longest increasing subsequence in the article. I renamed LIP to LC}
+
+\subsection{Simulated data from interval graphs}
+
+\subsubsection*{Dataset generation}
+
+At first we focus on purely synthetic interval graphs, where a genome is conceptually a real line and molecules are intervals on this line.
+We make the simplifying assumption that molecules all have the same size, and are evenly distributed along the genome.
+%As described in the section \ref{sec:interval_graph}, we transform this representation into an interval graph.
+%We then remove random nodes from this ideal graph to simulate local variations on molecule overlap.\footnote{RC to YD: do we do that?! if so, how many? I thought that Table 1 had exactly 5000 (and 10000) molecules, not 5000 minus some randomly deleted ones. YD: You are right. It is an experiment from the past}
+%The resulting graph is our ground truth for the next parts.
+
+To simulate barcode graphs, we start from an intersection graph of molecules and perform so-called \emph{merges} of molecules. A merge is defined as follows: given two nodes $a$ and $b$ that will be merged, create a new node $c$; for all neighbors $v$ of either $a$ or $b$, create edges $(c,v)$, and finally delete $a$ and $b$.
+Merging two nodes in the graph is equivalent to replacing two molecules by one barcode corresponding to those two molecules. A succession of merge operation creates an exact barcode graph as defined in Section~\ref{sec:methods}. %i.e. the merges do not create false edges.
+
+%The average number of merges is the average molecule nodes that have been merged into a single node of the BG, and the merge deviation as its standard deviation.
+%These two values are used to generate variations on experiment parameters in the next sections.
+% RC: removed as we don't use these terms later
+
+We created 8 synthetic test datasets, using the following grid of parameters: $5,000$ or  $10,000$ molecules, average number of merges (i.e. molecules per barcode) of $2$ or $3$, standard deviation in the number of merges of 0 or 1. %Inside of our simulated barcode graph we keep track of the molecule merged (ordered from 1 to length).
+
+\subsubsection*{Analysis}
+
+Table \ref{tab:simu_accsens} shows the accuracy and sensitivity of barcode graphs and their corresponding lcp graphs.
+% As expected, the accuracy mesure show that the barcode graph is not well ordered.
+Recall that accuracy measures whether a random path in the graph has a correct order of barcodes. As expected, paths in the barcode graph are mostly inaccurate, as one may jump from one genome location to another due to barcode merges. Conversely paths in the lcp graph are very accurate ($100\%$ for nearly all $l=10$ paths), with a slight decrease at $l=100$ ($95\%-100\%$). The sensitivity metric measures how much of the true barcode ordering is present in short paths of the graph. It is naturally high for barcode graphs, as they preserve all overlaps between molecules.
+Note that some merges collapse consecutive molecules by chance, hence the sensitivity of barcode graphs is not always 1. On lcp graphs, sensitivity is high for short paths ($>93\%$ for $l=10$) and drops for long ones ($54\%-98\%$ for $l=100$).
+Nevertheless, this shows that at least partial molecule order can indeed be inferred by only looking at central nodes of lcps in the lcp graph, and that the lcp graph shows a better balance between accuracy and sensitivity than the barcode graph. Note that this is not the only way to infer molecule order, as one could also extract information from clique-pairs, yet we leave this direction for future work.
+
+Overall, lcp graphs are clearly more informative than barcode graphs for reconstructing accurate barcode orderings. The hardest instances, in terms of accuracy and sensitivity on lcp graphs, are when the number of molecules is low and the number of merges is high. 
+
+\begin{table}
+
+\begin{tabular}{|p{1cm}|p{1cm}|p{.7cm}||p{1cm}|p{1cm}|p{1cm}|p{1cm}|p{1cm}|p{1cm}|p{1cm}|p{1cm}|  }
+ \hline
+   % &\multicolumn{2}{c|}{\textbf{l=1}} % not so interesting, everything is correct for those values
+   \multicolumn{3}{|c||}{\textbf{Graph}}
+   & \multicolumn{2}{c|}{\textbf{l=2}}
+   %& \multicolumn{2}{c|}{\textbf{l=3}}
+   & \multicolumn{2}{c|}{\textbf{l=4}} 
+   & \multicolumn{2}{c|}{\textbf{l=10}}
+   & \multicolumn{2}{c|}{\textbf{l=100}} 
+   \\
+ \hline
+\# mols & Merges & Type  & Acc & Sens & Acc & Sens & Acc & Sens & Acc & Sens \\
+
+    \hline
+    \hline
+    \multirow{2}{*}{5,000} & \multirow{2}{*}{2 $\pm$ 0} & $G_b$ & 0.48 & 1.00 & 0.09 & 1.00 & 0.00 & 0.99 & 0.00 & 0.94\\
+     & & lcp & 1.00 & 1.00 & 1.00  & 0.99 & 1.00 & 0.98 & 1.00 & 0.88 \\
+    \hline
+    \multirow{2}{*}{5,000} & \multirow{2}{*}{2 $\pm$ 1} & $G_b$ & 0.46 & 1.00 & 0.09 & 1.00 & 0.00 & 1.00 & 0.00 & 0.98\\
+    & & lcp & 1.00 & 1.00 & 1.00 & 0.99 & 1.00 & 0.98 & 0.99 & 0.84 \\
+    \hline
+    \multirow{2}{*}{5,000} & \multirow{2}{*}{3 $\pm$ 0} & $G_b$ & 0.31 & 1.00 & 0.03 & 1.00 & 0.00 & 0.99 & 0.00 & 0.88\\
+    & &  lcp& 1.00&  0.99 & 1.00 & 0.98 & 0.99 & 0.95 & 0.99 & 0.60 \\
+    \hline
+    \multirow{2}{*}{5,000} & \multirow{2}{*}{3 $\pm$ 1} & $G_b$ & 0.33 & 1.00 & 0.03 & 1.00 & 0.00 & 1.00 & 0.00&  0.96\\
+    & & lcp & 1.00 & 0.99 & 1.00 & 0.97 & 0.99 & 0.93 & 0.95 & 0.54 \\
+    \hline
+    \multirow{2}{*}{10,000} & \multirow{2}{*}{2 $\pm$ 0} & $G_b$ & 0.48 & 1.00 & 0.10 & 1.00 & 0.00 & 1.00 & 0.00 & 1.00\\
+    & & lcp & 1.00 & 1.00 & 1.00 & 1.00 & 1.00 & 1.00 & 1.00 & 0.98 \\
+    \hline
+    \multirow{2}{*}{10,000} & \multirow{2}{*}{2 $\pm$ 1} & $G_b$ & 0.47 & 1.00 & 0.09 & 1.00 & 0.00 & 1.00 & 0.00  & 0.97\\
+    & & lcp & 1.00 & 1.00 & 1.00 & 1.00 & 1.00 & 0.99 & 0.99 &  0.93 \\
+    \hline
+    \multirow{2}{*}{10,000} & \multirow{2}{*}{3 $\pm$ 0} & $G_b$ & 0.31&  1.00 & 0.02 & 1.00 & 0.00 & 1.00 & 0.00  &1.00\\
+    & & lcp & 1.00 & 1.00 & 1.00 & 0.99 & 1.00 & 0.99 & 1.00 & 0.87\\
+    \hline
+    \multirow{2}{*}{10,000} & \multirow{2}{*}{3 $\pm$ 1} & $G_b$  &0.31 & 1.00 & 0.03 & 1.00 & 0.00 & 1.00 & 0.00  &0.97\\
+    & & lcp & 1.00 & 0.99 & 1.00 & 0.99 & 1.00 & 0.97 & 0.99  & 0.78\\
+    \hline
+ \end{tabular}
+\caption{Same as Table 2 but for interval graphs. Let's see how we present this.\label{tab:simu_accsens}}
+\end{table}
+
+Table \ref{tab:synthetic_results} reports additional barcode graphs metrics over the same 8 datasets.
+All barcode graphs have a high longest correct path (LC), confirming the theoretical possibility of reconstructing over 99\% of the true barcode order, through central nodes of a suitable path of lcps.
+The last two metrics of Table \ref{tab:synthetic_results} are computed on lcp paths found by the algorithm described in Section~\ref{sec:suitable_path}. On 10,000 molecules graphs, the longest common subsequence (LCS) of the computed lcp path is 90\% of the true barcode order, indicating that we nearly recovered the correct barcode order. The 5,000 molecules graphs appear to be more challenging to process as, smaller graphs are more sensitive to information loss by the merging process, yet LCS remain above $79\%$. %But we think that smarter algorithms can reconstruct the path because of the size of the LC.
+The U/O metric reports the ability to count the number of molecules that are present in each barcode, though counting the number of times each barcode occurs in the computed lcp path. %Almost all the barcodes that correspond to well placed lcps in the path lead to a correct barcode counts and missing lcps lead to undercounts.
+Overall, lcp paths tend to undercount molecules (higher $U$ metric than $O$), yet both $U$ and $O$ metrics are around or below $10\%$ of the number of molecules, indicating that lcp path provides a reliable estimation of the number of molecules per barcode.
+
+%To conclude on the values from the table \ref{tab:synthetic_results}, the lcp graph appears to be a good structure to extract paths from it.
+%Even simple path construction heuristics can extract a good approximation of molecule counts and barcode orderings.
+
+\begin{table}
+\begin{tabular}{|l|l|l||l|l|l||l|l|}
+    \hline
+    \# mols & Merges & \# barcodes & LC & U/O Counts & LCS \tabularnewline
+    \hline
+    \hline
+    5,000 & 2 $\pm$ 0 & 2500 & 4990 & 227/56 & 4748  \tabularnewline
+    \hline
+    5,000 & 2 $\pm$ 1 & 2428 & 4991 & 405/109 & 4512  \tabularnewline
+    \hline
+    5,000 & 3 $\pm$ 0 & 1667 & 4985 & 549/240 & 4282 \tabularnewline
+    \hline
+    5,000 & 3 $\pm$ 1 & 1682 & 4975 & 498/665 & 3972 \tabularnewline
+    \hline
+    10,000 & 2 $\pm$ 0 & 5000 & 9992 & 268/68 & 9667  \tabularnewline
+    \hline
+    10,000 & 2 $\pm$ 1 & 4889 & 9993 & 418/129 & 9531  \tabularnewline
+    \hline
+    10,000 & 3 $\pm$ 0 & 3334 & 9981 & 593/184 & 9309  \tabularnewline
+    \hline
+    10,000 & 3 $\pm$ 1 & 3341 & 9987 & 753/201 & 9140  \tabularnewline
+    \hline
+ \end{tabular}
+\caption{Experiments on synthetic barcode graphs. The dataset is described on the first part of the columns (Number of molecules in the molecule graph, merging factors, resulting number of barcodes in the barcode graph). The LC column is the length of the longest correct path in the lcp graph. The U/C column is the number of undercounted and overcounted molecules per barcode in our computed lcp path, and the LCS column is the length of the longest common subsequence between the lcp path and the correct barcode order.
+\label{tab:synthetic_results}}
+\end{table}
+
+\subsection{Genome graphs}
+
+\subsubsection*{Quality of genome LCP graphs}
+
+
+\begin{table}
+\begin{tabular}{ |p{2.3cm}||p{1cm}|p{1cm}|p{1cm}|p{1cm}|p{1cm}|p{1cm}|p{1cm}|p{1cm}|  }
+ \hline
+   % &\multicolumn{2}{c|}{\textbf{l=1}} % not so interesting, everything is correct for those values
+   & \multicolumn{2}{c|}{\textbf{l=2}}
+   %& \multicolumn{2}{c|}{\textbf{l=3}}
+   & \multicolumn{2}{c|}{\textbf{l=4}} 
+   & \multicolumn{2}{c|}{\textbf{l=10}}
+   & \multicolumn{2}{c|}{\textbf{l=100}} 
+   \\
+ \hline
+\textbf{Graph}  & Acc & Sens & Acc & Sens & Acc & Sens & Acc & Sens \\
+\hline
+\hline
+\textbf{$G_b$, $m=1$} &
+ %1 &1 & % l = 1
+ 1 & 1 & % l = 2
+ % 1&1 & % l = 3
+ 1 & 1 & % l = 4
+ 1 & 1 &  % l = 10
+ 1 & 1 % l = 100
+ \\
+ \textbf{$lcp$, $m=1$} &
+ %1 & 1  &  % l = 1
+ 1 & 1 &  % l = 2
+ %1 & 1 & % l = 3
+ 1 & 0.99 & % l = 4
+ 1 & 0.99 &  % l = 10
+ 1 & 0.84  % l = 100
+ \\
+ \hline
+ \textbf{$G_b$, $m=2$} & 
+ %1 & 1  &  % l = 1
+ 0.50 & 1 &  % l = 2
+ %0.25 & 1 & % l = 3
+ 0.12 & 0.99 & % l = 4
+ 0.001 & 0.99 &  % l = 10
+ 0 & 0.99     % l = 100
+ \\
+ \textbf{$lcp$, $m=2$} &
+ %1 &1  &  % l = 1
+ 0.99 & 0.99 &  % l = 2
+ %0.99 & 0.99 & % l = 3
+ 0.99 & 0.99 & % l = 4
+ 0.99 & 0.99 &  % l = 10
+ 0.94 & 0.84   % l = 100
+ \\
+ \hline
+ \textbf{$G_b$, $m=3$} & 
+ %1 & 1 & % l = 1
+ 0.34 & 1 &  % l = 2
+ %0.12 & 1 & % l = 3
+ 0.04 & 1 & % l = 4
+ 0 &  1   &  % l = 10
+ 0 &  1      % l = 100
+ \\
+ \textbf{$lcp$, $m=3$} &
+ %1 &1 &  % l = 1
+ 0.99 & 0.99 &   % l = 2
+ %0.99 & 0.99 & % l = 3
+ 0.99 & 0.99 & % l = 4
+ 0.98 & 0.99 &  % l = 10
+ 0.88 & 0.88 % l = 100
+ \\
+ \hline
+ \textbf{$G_b$, $m=4$} & 
+ %1 & 1 &  % l = 1
+ 0.26 & 1 &  % l = 2
+ %0.07 & 1 &  l = 3
+ 0.02 & 0.99 & % l = 4
+ 0 & 0.99 & % l = 10
+ 0 &  0.99  % l = 100
+ \\
+ \textbf{$lcp$, $m=4$} &
+ %1 &1 & % l = 1
+ 0.99 & 0.99  &  % l = 2
+ %&  & % l = 3
+ 0.99 & 0.99 & % l = 4
+ 0.98 & 0.99 &  % l = 10
+ 0.83  & 0.87  % l = 100
+ \\
+ \hline
+\end{tabular}
+\caption{Accuracy and sensitivity of randomly sampled paths of lengths 2, 4, 10 and 100 edges in lcp graphs, compared to sampled paths of the same lengths in barcode graphs ($G_b$) as a base-line, with 15 kbp E. coli molecules, 50X coverage, minimal molecule overlap lengths of 7000. \label{tab:d2-local-quality}}
+\end{table}
+
+We designed experiments to evaluate the quality of lcp graphs constructed from the barcode graphs that originate from real molecules. We created a synthetic \emph{E.coli} molecule graph by simulating molecules of length 15 kbp using \texttt{wgsim}, corresponding to sequences of the E. coli genome, at 50x coverage of the genome and with no sequencing errors. Overlaps between all pairs of molecules were computed using \texttt{minimap2} using default parameters, and we selected only overlaps of lengths $L$ ($L=6000,7000,8000,9000$) using \texttt{fpa}~\cite{fpa}. 
+
+
+
+%We randomly merged $k$ molecules ($k=2,3,4,5$) to create synthetic barcode graphs of these molecules. We constructed lcp-graphs from these barcode graphs.
+
+%We then evaluated the quality of the lcp-graphs by computing  two metrics: accuracy and sensitivity. These metrics were obtained by randomly samplings paths having $l=2,4,10,100$ edges from the lcp-graphs. Each sampled path is converted into a succession of barcodes by taking the central node of each lcp node.  To measure accuracy, a path having central nodes $(p_1,p_2,\ldots,p_l)$ is considered to be correct if there exists a succession $m_0,m_2,\ldots,m_{l+1}$ of overlapping molecules (e.g. a path from the original molecule graph) such that $m_0 \in m(p_0), m_2 \in m(p_2)$, \ldots, $m_l \in m(p_l)$. Accuracy is defined as the number of correct paths over the total number of sampled paths. 
+%To measure sensitivity, we determined for all $(l+1)$-tuples $m_i,m_{i+1},\ldots,m_{i+l}$ of consecutive molecules, whether there exist a path of central nodes $b(m_i),b(m_{i+1}),\ldots,b(m_{i+l})$ in the lcp-graph graph. Sensitivity is then the ratio of such paths that are found in the lcp-graph.  
+
+Table~\ref{tab:d2-local-quality} shows the accuracy and sensitivity on our constructed lcp graphs versus the average number of merges, i.e. average number of molecules per barcode. Barcode graphs have poor accuracy, which is expected due to the glueing of molecules, but perfect sensitivity as all molecule overlaps are found. In contrast, lcp-graphs manage to keep both near-perfect accuracy and sensitivity ($>0.98$) for short paths ($<10$) and have a decrease in accuracy ($0.83-0.94$) and sensitivity $(0.84-0.87)$ for paths of length $100$.
+
+
+\subsubsection*{Construction of genome barcode graphs from reads \label{sec:bg_reads}}
+
+In this section we describe a method that constructs an accurate barcode graph directly from linked-read data. This closes a gap between our theoretical results, that required to already have a barcode graph, and experimental data which only consist of sequencing reads.
+
+We simulated reads from the \emph{E. coli} genome at 50X coverage using LRSIM. We assembled these reads using SPAdes version 3.12.0 without using linked-read information (only using paired-end information), in order to generate contigs to which linked-reads can be mapped to using the EMA aligner. We designed an algorithm to infer molecule overlaps given the set of contigs and the EMA alignments. In brief, the algorithm proceeds as follows
+
+For each barcode, and all reads associated that barcodes mapped to a contig, we collect and sort read mapping positions. We define a molecule interval to be the first and last mapping positions of a group of mapping positions that are all within a distance $<$ $M_d$ than each other. A barcode can be associated to many molecule intervals even within the same contig. We construct the barcode graph by looking at overlapping molecule intervals from different barcodes. If two intervals share an overlap larger than a parameter $M_o$, we add an edge between the two associated barcodes.
+
+
+\begin{figure}
+    \centering
+    \includegraphics[width=.68\textwidth]{barcode_graph_optimisation.pdf}
+    \caption{Quality of barcode graph construction from a set of reads and corresponding paired-end assembly. Each square represents the F1-score given parameters $M_d$ (read mapping distance) and $M_o$ (minimal molecule overlap length), from  purple (low F1-score) to yellow (high F1-score). %The lowest F1-score is 0.032 for $(M_d M_o) = (10000, 1000)$, the highest (square in red) is 0.953 for $(M_d, M_o) = (9000, 5000)$
+    }
+    \label{fig:barcode_graph:parameter_opti}
+\end{figure}
+
+
+The algorithm has two key parameters: $M_d$, the maximal distance between two reads in an inferred molecule interval, and $M_o$, the minimal overlap length between molecules. As we used simulated data, we were able to generate a ground-truth barcode graph given that molecule intervals in the underlying genome are known for each barcode. Figure \ref{fig:barcode_graph:parameter_opti} shows the performance of the algorithm in terms of F1-score (combining both sensitivity and precision, computed by comparing the edge set of the inferred barcode graph versus the edge set of the ground truth). We observe that the best F1-score (0.953) is reached for $(M_o, M_d) = (5000, 9000)$, with otherwise consistently high F1-scores ($\geq0.9$) whenever $M_o>2000$ and $M_d>7000$.
+
+%\subsection{If we have time: molecule counting vs Minerva}
+
+%$ python ~/10x-deconvolve/deconvolution/main/minerva_molecule_counting.py
+%minerva reported 2003 barcodes 5977 molecules
+%original reads contained 2938 barcodes 11926 molecules
+%472 correct counts 1462 / 69 under/over counted
+
+
+\section{Conclusion}
+
+In this paper, we introduced novel approaches to analyze linked-reads sequencing data. 
+We introduced the problem of recovering a barcode sequence from the barcode graph, and described its link with natural algorithmic problems on multiple-interval graphs; we believe that the potential applications in sequencing data analysis motivate further research on these algorithmic questions.
+Moreover, motivated by classic algorithmic techniques in interval graph realization, we introduced the concept of local clique pairs (lcp) and lcp graph.
+Our experiments on simulated data suggests that in realistic settings, the lcp graph exhibits a much more linear structure than the barcode graph and is likely a relevant intermediate structure between the barcode graph and the barcode sequence.
+
+The proposed barcode graph construction approach was only tested on simulated data and is merely a proof of concept. Barcode graphs for real linked-read data are expected to be obtainable using roughly the same pipeline (short-read assembly then EMA alignment), however further tweaks will likely be necessary to process e.g. repeat-rich mammalian genomes. The current method relies on having sufficient assembly contiguity (longer contigs than molecules). A potential direction that we leave for future work is to determine molecule intervals using the structure of the assembly graph instead of contigs.
+
+\bibliography{deconvolution.bib}
+
+\vfill\pagebreak
+\input{appendix.tex}
+
+\end{document}
